@@ -4,12 +4,14 @@ go 1.19
 
 require (
 	github.com/cli/go-gh v1.2.1
+	github.com/motemen/go-loghttp v0.0.0-20231107055348-29ae44b293f4
 	github.com/spf13/cobra v1.7.0
 )
 
 require (
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/motemen/go-nuts v0.0.0-20220604134737-2658d0104f31 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 )
 

@@ -21,7 +21,10 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/GitHubSecurityLab/gh-mrva/cmd"
+import (
+	"github.com/GitHubSecurityLab/gh-mrva/cmd"
+	_ "github.com/motemen/go-loghttp/global"
+)
 
 func main() {
 	cmd.Execute()
