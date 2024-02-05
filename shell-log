@@ -1,7 +1,3 @@
-
-The default interactive shell is now zsh.
-To update your account to use zsh, please run `chsh -s /bin/zsh`.
-For more details, please visit https://support.apple.com/kb/HT208050.
 hohn@gh-hohn:~/local/gh-mrva
 1:$ gh mrva submit --language cpp --session mirva-session-2 \
    --list mirva-list                                    \
@@ -29,13 +25,6 @@ Generated encoded bundle for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql (cpp-f
 2024/01/29 10:36:32 <-- 201 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses (2.26s)
 Done!
 
-
-A new release of gh is available: 2.37.0 → 2.42.1
-To upgrade, run: brew upgrade gh
-https://github.com/cli/cli/releases/tag/v2.42.1
-
-hohn@gh-hohn:~/local/gh-mrva
-0:$ hohn@gh-hohn:~/local/gh-mrva
 0:$ gh mrva status --session mirva-session-2
 
 2024/01/29 10:43:39 --> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809
@@ -54,11 +43,9 @@ Total repositories with findings: 1
 Total findings: 1
 Repositories with findings:
   google/flatbuffers (cpp-flatbuffer-func): 1
-hohn@gh-hohn:~/local/gh-mrva
-0:$ hohn@gh-hohn:~/local/gh-mrva
+
 0:$ gh mrva download --session mirva-session-2 \
    --output-dir mirva-session-2-sarif
-
 
 > 2024/01/29 10:44:07 --> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809
 2024/01/29 10:44:08 <-- 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809 (304.94ms)
@@ -72,37 +59,3 @@ Downloading artifacts for google_flatbuffers_8809
 Downloaded [mirva-session-2-sarif/google_flatbuffers_8809.sarif mirva-session-2-sarif/google_flatbuffers_8809.bqrs]
 Downloaded artifact for google/flatbuffers (1/1)
 1 artifacts downloaded
-hohn@gh-hohn:~/local/gh-mrva
-0:$ hohn@gh-hohn:~/local/gh-mrva
-0:$ hohn@gh-hohn:~/local/gh-mrva
-0:$ 
-
-hohn@gh-hohn:~/local/gh-mrva
-0:$ hohn@gh-hohn:~/local/gh-mrva
-0:$ git st
-On branch request-logging
-Changes to be committed:
-  (use "git restore --staged <file>..." to unstage)
-	new file:   databases-vscode.json
-	new file:   vscode-va-log.txt
-
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   go.mod
-	modified:   go.sum
-	modified:   main.go
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	*shell*
-	*shell*~
-	.#*shell*
-	.cache/
-	.vscode/
-	README.html
-	mirva-session-1-sarif/
-	mirva-session-2-sarif/
-
-hohn@gh-hohn:~/local/gh-mrva
-0:$ 
