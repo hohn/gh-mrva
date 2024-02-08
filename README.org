@@ -97,9 +97,10 @@
         cd ~/local/gh-mrva
         # Build it
         go mod edit -replace="github.com/GitHubSecurityLab/gh-mrva=/Users/hohn/local/gh-mrva"
-        go build
+        go build .
 
         # Install 
+        gh extension remove mrva
         gh extension install .
 
         # Sanity check
@@ -128,7 +129,7 @@
       #+BEGIN_SRC sh 
         gh mrva submit --help    
 
-        gh mrva submit --language cpp --session mirva-session-1 \
+        gh mrva submit --language cpp --session mirva-session-4 \
            --list mirva-list                                    \
            --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
       #+END_SRC
@@ -181,4 +182,19 @@
 
    The workflow producing the logs:
    https://github.com/github/codeql-variant-analysis-action/blob/main/variant-analysis-workflow.yml
-  
+** Compacted Edit-Run-Debug Cycle
+   With a full [[*Using MRVA][Using MRVA]] cycle done, only these steps are needed in a
+   edit-run-debug cycle.
+   #+BEGIN_SRC sh 
+     cd ~/local/gh-mrva
+
+     # Build it
+     go build .
+
+     ./gh-mrva -h
+
+     # Submit the mrva job
+     ./gh-mrva submit --language cpp --session mirva-session-6       \
+               --list mirva-list                                     \
+               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+   #+END_SRC

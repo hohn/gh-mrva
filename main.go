@@ -22,10 +22,46 @@ THE SOFTWARE.
 package main
 
 import (
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/GitHubSecurityLab/gh-mrva/cmd"
-	_ "github.com/motemen/go-loghttp/global"
+
+	"github.com/motemen/go-loghttp"
+	"github.com/motemen/go-nuts/roundtime"
 )
 
 func main() {
+	var transport = &loghttp.Transport{
+		Transport:   http.DefaultTransport,
+		LogRequest:  LogRequestDump,
+		LogResponse: LogResponseDump,
+	}
+
+	http.DefaultTransport = transport
+
 	cmd.Execute()
+}
+
+// Used if transport.LogRequest is not set.
+func LogRequestDump(req *http.Request) {
+	log.Printf(">> %s %s", req.Method, req.URL)
+}
+
+type contextKey struct {
+	name string
+}
+
+var ContextKeyRequestStart = &contextKey{"RequestStart"}
+
+// Used if transport.LogResponse is not set.
+func LogResponseDump(resp *http.Response) {
+	ctx := resp.Request.Context()
+	if start, ok := ctx.Value(ContextKeyRequestStart).(time.Time); ok {
+		log.Printf("<< %d %s (%s)", resp.StatusCode, resp.Request.URL,
+			roundtime.Duration(time.Since(start), 2))
+	} else {
+		log.Printf("<< %d %s", resp.StatusCode, resp.Request.URL)
+	}
 }
