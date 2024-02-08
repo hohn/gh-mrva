@@ -194,7 +194,9 @@
      ./gh-mrva -h
 
      # Submit the mrva job
-     ./gh-mrva submit --language cpp --session mirva-session-6       \
+     SN=9
+     ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                --list mirva-list                                     \
-               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-$SN.out &
+     tail -f log-$SN.out
    #+END_SRC

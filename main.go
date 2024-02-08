@@ -22,6 +22,8 @@ THE SOFTWARE.
 package main
 
 import (
+	"bytes"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -44,9 +46,20 @@ func main() {
 	cmd.Execute()
 }
 
-// Used if transport.LogRequest is not set.
 func LogRequestDump(req *http.Request) {
 	log.Printf(">> %s %s", req.Method, req.URL)
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		var w http.ResponseWriter
+		log.Printf("Error reading request body: %v", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Printf(">> Request body: %v", string(buf))
+
+	reader := io.NopCloser(bytes.NewBuffer(buf))
+	req.Body = reader
 }
 
 type contextKey struct {
@@ -55,7 +68,6 @@ type contextKey struct {
 
 var ContextKeyRequestStart = &contextKey{"RequestStart"}
 
-// Used if transport.LogResponse is not set.
 func LogResponseDump(resp *http.Response) {
 	ctx := resp.Request.Context()
 	if start, ok := ctx.Value(ContextKeyRequestStart).(time.Time); ok {
@@ -64,4 +76,17 @@ func LogResponseDump(resp *http.Response) {
 	} else {
 		log.Printf("<< %d %s", resp.StatusCode, resp.Request.URL)
 	}
+
+	buf, err := io.ReadAll(resp.Body)
+	if err != nil {
+		var w http.ResponseWriter
+		log.Printf("Error reading response body: %v", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Printf(">> Response body: %v", string(buf))
+
+	reader := io.NopCloser(bytes.NewBuffer(buf))
+	resp.Body = reader
+
 }
