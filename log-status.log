@@ -1,89 +1,10 @@
-SN=10
-./gh-mrva submit --language cpp --session mirva-session-$SN     \
-          --list mirva-list                                     \
-          --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-$SN.out &
-tail -f log-$SN.out
+# Check the status
+./gh-mrva status --session mirva-session-$SN |& tee log-$SN-status.out
 
 
-Resolving mirva-list repositories from /Users/hohn/local/gh-mrva/databases.json
-Submitting 1 queries for 1 repositories
-Generating query pack for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
-Resolving query id for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
-Metadata: {
-  "name" : "pickfun",
-  "description" : "pick function from FlatBuffers",
-  "kind" : "problem",
-  "id" : "cpp-flatbuffer-func",
-  "problem.severity" : "warning"
-}
-
-QLPack exists, stripping all other queries from /Users/hohn/local/gh-mrva
-Preparing stripped QLPack in /var/folders/bk/dt0jx9f92zq876lmm3f2dpk40000gn/T/query-pack-1881677116
-Fixing QLPack in /var/folders/bk/dt0jx9f92zq876lmm3f2dpk40000gn/T/query-pack-1881677116
-Installing QLPack dependencies
-Compiling and bundling the QLPack (This may take a while)
-Generated encoded bundle for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql (cpp-flatbuffer-func)
-2024/02/08 14:54:14 >> POST https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses
-2024/02/08 14:54:14 >> Request body: {"repositories":["google/flatbuffers"],"language":"cpp","query_pack":"H4sIAAAA...","action_repo_ref":"main"}
-
-from
-        body := struct {
-                        Repositories []string `json:"repositories"`
-                        Language     string   `json:"language"`
-                        Pack         string   `json:"query_pack"`
-                        Ref          string   `json:"action_repo_ref"`
-                }
-from
-        encodedBundle
-from
-        id, err := utils.SubmitRun(controller, language, chunk, encodedBundle)
-from
-        encodedBundle, queryId, err := utils.GenerateQueryPack(query, language, additionalPacks)
-from
-        bundlePath := filepath.Join(filepath.Dir(queryPackDir),
-        fmt.Sprintf("qlpack-%s-generated.tgz", uuid.New().String()))  
-        ...
-        args = []string{"pack", "bundle", "-o", bundlePath, queryPackDir}
-        ...
-	bundleBase64 := base64.StdEncoding.EncodeToString(bundleBytes)
-	return bundleBase64, queryId, nil
-So it's a base64 encoded gzipped tar file.
-In reverse:  base64 -d < foo1 | gunzip | tar t
-
-"query_pack":... is
-0:$ base64 -d < foo1 | gunzip | tar t|head -20
-FlatBuffersFunc.ql
-LICENSE
-qlpack.yml
-codeql-pack.lock.yml
-README.md
-.codeql/libraries/codeql/dataflow/0.1.5/qlpack.yml
-.codeql/libraries/codeql/dataflow/0.1.5/CHANGELOG.md
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/TaintTracking.qll
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/test/InlineFlowTest.qll
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/internal/DataFlowImplConsistency.qll
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/internal/DataFlowImpl.qll
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/internal/DataFlowImplCommon.qll
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/VariableCapture.qll
-.codeql/libraries/codeql/dataflow/0.1.5/codeql/dataflow/DataFlow.qll
-.codeql/libraries/codeql/tutorial/0.2.5/qlpack.yml
-.codeql/libraries/codeql/tutorial/0.2.5/CHANGELOG.md
-.codeql/libraries/codeql/tutorial/0.2.5/tutorial.qll
-.codeql/libraries/codeql/util/0.2.5/qlpack.yml
-.codeql/libraries/codeql/util/0.2.5/CHANGELOG.md
-.codeql/libraries/codeql/util/0.2.5/codeql/util/Location.qll
-...
-
-0:$ base64 -d < foo1 | gunzip | tar t| tail -5
-.codeql/precompiled/271765fqs2kb5d2cdumjptd98s9.bytes.qlx
-.codeql/precompiled/629134s1rogmnmbe22m1da10kke.bytes.qlx
-.codeql/precompiled/b4c9a2bili3cn98q4a64ldecog2.bytes.qlx
-.codeql/precompiled/09f73besrcbo1ghd85ondjlsv80.bytes.qlx
-FlatBuffersFunc.qlx
-
-
-2024/02/08 14:54:17 << 201 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses
-2024/02/08 14:54:17 >> Response body: {
+2024/02/08 15:27:29 >> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8985
+2024/02/08 15:27:29 << 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8985
+2024/02/08 15:27:29 >> Response body: {
   "id": 8985,
   "controller_repo": {
     "id": 747492529,
@@ -173,10 +94,27 @@ FlatBuffersFunc.qlx
     "site_admin": true
   },
   "query_language": "cpp",
-  "query_pack_url": "https://objects-origin.githubusercontent.com/codeql-query-console/variant_analyses/8985/query_pack?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=queryconsoleprod%2F20240208%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240208T225421Z&X-Amz-Expires=3600&X-Amz-Signature=732819ba6d72cfd402c4c491b9e64b6e324fd781d11560fccbdf8645e827a252&X-Amz-SignedHeaders=host",
+  "query_pack_url": "https://objects-origin.githubusercontent.com/codeql-query-console/variant_analyses/8985/query_pack?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=queryconsoleprod%2F20240208%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240208T232733Z&X-Amz-Expires=3600&X-Amz-Signature=8eb6f15e173820073ab97b714121d8e7be62f2e04f2c4cd2192b36b252c8aaaa&X-Amz-SignedHeaders=host",
   "created_at": "2024-02-08T22:54:21Z",
-  "updated_at": "2024-02-08T22:54:21Z",
-  "status": "in_progress",
+  "updated_at": "2024-02-08T22:54:22Z",
+  "actions_workflow_run_id": 7837027089,
+  "completed_at": "2024-02-08T22:55:02Z",
+  "status": "succeeded",
+  "scanned_repositories": [
+    {
+      "repository": {
+        "id": 19953044,
+        "name": "flatbuffers",
+        "full_name": "google/flatbuffers",
+        "private": false,
+        "stargazers_count": 21718,
+        "updated_at": "2024-02-08T13:40:55Z"
+      },
+      "analysis_status": "succeeded",
+      "result_count": 1,
+      "artifact_size_in_bytes": 1325
+    }
+  ],
   "skipped_repositories": {
     "access_mismatch_repos": {
       "repository_count": 0,
@@ -197,4 +135,17 @@ FlatBuffersFunc.qlx
   }
 }
 
-Done!
+Run name: mirva-session-10
+Status: succeeded
+Total runs: 1
+Total successful scans: 1
+Total failed scans: 0
+Total skipped repositories: 0
+Total skipped repositories due to access mismatch: 0
+Total skipped repositories due to not found: 0
+Total skipped repositories due to no database: 0
+Total skipped repositories due to over limit: 0
+Total repositories with findings: 1
+Total findings: 1
+Repositories with findings:
+  google/flatbuffers (cpp-flatbuffer-func): 1
