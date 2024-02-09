@@ -49,24 +49,28 @@ func main() {
 func LogRequestDump(req *http.Request) {
 	log.Printf(">> %s %s", req.Method, req.URL)
 
-	// TODO: as function
 	// TODO: show index for pk zip archives
 	// TODO: show json ?toc? for
 	//   2024/02/08 14:54:14 >> Request body: {"repositories":["google/flatbuffers"],
 	//   "language":"cpp","query_pack":"H4sIAAAA...","action_repo_ref":"main"}
-	if req.Body != nil {
-		buf, err := io.ReadAll(req.Body)
+	req.Body = LogBody(req.Body, "request")
+}
+
+func LogBody(body io.ReadCloser, from string) io.ReadCloser {
+	if body != nil {
+		buf, err := io.ReadAll(body)
 		if err != nil {
 			var w http.ResponseWriter
-			log.Printf("Error reading request body: %v", err.Error())
+			log.Fatalf("Error reading %s body: %v", from, err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return nil
 		}
-		log.Printf(">> Request body: %v", string(buf))
+		log.Printf(">> %s body: %v", from, string(buf))
 
 		reader := io.NopCloser(bytes.NewBuffer(buf))
-		req.Body = reader
+		return reader
 	}
+	return body
 }
 
 type contextKey struct {
@@ -84,17 +88,5 @@ func LogResponseDump(resp *http.Response) {
 		log.Printf("<< %d %s", resp.StatusCode, resp.Request.URL)
 	}
 
-	if resp.Body != nil {
-		buf, err := io.ReadAll(resp.Body)
-		if err != nil {
-			var w http.ResponseWriter
-			log.Printf("Error reading response body: %v", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		log.Printf(">> Response body: %v", string(buf))
-
-		reader := io.NopCloser(bytes.NewBuffer(buf))
-		resp.Body = reader
-	}
+	resp.Body = LogBody(resp.Body, "response")
 }

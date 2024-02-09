@@ -189,12 +189,13 @@
      cd ~/local/gh-mrva
 
      # Build it
+     go clean
      go build .
 
      ./gh-mrva -h
 
      # In log-submit-the-mrva-job.log after edit
-     SN=11
+     SN=14
      ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                --list mirva-list                                     \
                --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-$SN.out &
