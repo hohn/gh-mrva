@@ -22,6 +22,7 @@ THE SOFTWARE.
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"io"
 	"log"
@@ -48,15 +49,11 @@ func main() {
 
 func LogRequestDump(req *http.Request) {
 	log.Printf(">> %s %s", req.Method, req.URL)
-
-	// TODO: show index for pk zip archives
-	// TODO: show json ?toc? for
-	//   2024/02/08 14:54:14 >> Request body: {"repositories":["google/flatbuffers"],
-	//   "language":"cpp","query_pack":"H4sIAAAA...","action_repo_ref":"main"}
 	req.Body = LogBody(req.Body, "request")
 }
 
 func LogBody(body io.ReadCloser, from string) io.ReadCloser {
+
 	if body != nil {
 		buf, err := io.ReadAll(body)
 		if err != nil {
@@ -65,7 +62,50 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return nil
 		}
-		log.Printf(">> %s body: %v", from, string(buf))
+
+		IsZipFile := func() bool {
+			if len(buf) >= 4 {
+				// The header is []byte{ 0x50, 0x4b, 0x03, 0x04 }
+				magic := []byte{0x50, 0x4b, 0x03, 0x04}
+				if bytes.Equal(buf[0:4], magic) {
+					return true
+				} else {
+					return false
+				}
+			} else {
+				return false
+			}
+		}
+
+		if IsZipFile() {
+			// Show index for pk zip archives
+			buf1 := make([]byte, len(buf))
+			copy(buf1, buf)
+
+			r, err := zip.NewReader(bytes.NewReader(buf1), int64(len(buf1)))
+			if err != nil {
+				log.Fatal(err)
+			}
+			// defer r.Close()
+
+			// Print the archive index
+			log.Printf(">> %s body:\n", from)
+			log.Printf("zip file, contents:\n")
+
+			for _, f := range r.File {
+				log.Printf("\t%s\n", f.Name)
+			}
+		} else if false {
+			// TODO: show json ?toc? for
+			//   2024/02/08 14:54:14 >> Request body: {"repositories":["google/flatbuffers"],
+			//   "language":"cpp","query_pack":"H4sIAAAA...","action_repo_ref":"main"}
+			//  54:0:$ base64 -d < foo1 | gunzip | tar t|head -20
+			// base64 has no magic number.
+			// We have to decode enough to check the gzip magic number, 0x1f 0x8b
+			// 4 chars in base64 yield 3 bytes.
+		} else {
+			log.Printf(">> %s body: %v", from, string(buf))
+		}
 
 		reader := io.NopCloser(bytes.NewBuffer(buf))
 		return reader
