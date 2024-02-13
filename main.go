@@ -22,8 +22,12 @@ THE SOFTWARE.
 package main
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -77,6 +81,44 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			}
 		}
 
+		IsBase64Gzip := func(val []byte) bool {
+			// Some important payloads can be listed via
+			// base64 -d < foo1 | gunzip | tar t|head -20
+			//
+			// This function checks the request body up to the `gunzip` part.
+			//
+			if len(val) >= 4 {
+				// Extract header
+				hdr := make([]byte, base64.StdEncoding.DecodedLen(4))
+				_, err := base64.StdEncoding.Decode(hdr, []byte(val[0:4]))
+				if err != nil {
+					log.Println("WARNING: IsBase64Gzip decode error:", err)
+					return false
+				}
+				// Check for gzip heading
+				magic := []byte{0x1f, 0x8b}
+				if bytes.Equal(hdr[0:2], magic) {
+					return true
+				} else {
+					return false
+				}
+			} else {
+				return false
+			}
+		}
+
+		MaybeJSON := func() bool {
+			if len(buf) >= 4 { // {""} is 4 characters
+				if bytes.Equal(buf[0:2], []byte("{\"")) {
+					return true
+				} else {
+					return false
+				}
+			} else {
+				return false
+			}
+		}
+
 		if IsZipFile() {
 			// Show index for pk zip archives
 			buf1 := make([]byte, len(buf))
@@ -95,14 +137,69 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			for _, f := range r.File {
 				log.Printf("\t%s\n", f.Name)
 			}
-		} else if false {
-			// TODO: show json ?toc? for
-			//   2024/02/08 14:54:14 >> Request body: {"repositories":["google/flatbuffers"],
-			//   "language":"cpp","query_pack":"H4sIAAAA...","action_repo_ref":"main"}
-			//  54:0:$ base64 -d < foo1 | gunzip | tar t|head -20
-			// base64 has no magic number.
-			// We have to decode enough to check the gzip magic number, 0x1f 0x8b
-			// 4 chars in base64 yield 3 bytes.
+		} else if MaybeJSON() {
+			// TODO: show index for encoded query packs in the json <value>:
+			// {..."query_pack": <value>,...}
+			//
+			type Message struct {
+				// FIXME: exact structure
+				ActionRepoRef string   `json:"action_repo_ref"`
+				Language      string   `json:"language"`
+				QueryPack     string   `json:"query_pack"`
+				Repositories  []string `json:"repositories"`
+			}
+			buf1 := make([]byte, len(buf))
+			copy(buf1, buf)
+			dec := json.NewDecoder(bytes.NewReader(buf1))
+			dec.DisallowUnknownFields()
+
+			var m Message
+			if err := dec.Decode(&m); err == io.EOF {
+				log.Printf(">> %s body: %v", from, string(buf))
+			} else if err != nil {
+				log.Printf("WARNING: json decode error: %s\n", err)
+				log.Printf(">> %s body: %v", from, string(buf))
+			}
+			log.Printf(">> %s body:\n", from)
+			log.Printf("    \"%s\": \"%s\"\n", "action_repo_ref", m.ActionRepoRef)
+			log.Printf("    \"%s\": \"%s\"\n", "language", m.Language)
+			log.Printf("    \"%s\": \"%s\"\n", "repositories", m.Repositories[:])
+
+			// Provide custom logging for encoded, compressed tar file
+			if IsBase64Gzip([]byte(m.QueryPack)) {
+				// These are decoded manually via
+				//    base64 -d < foo1 | gunzip | tar t | head -20
+				// but we need complete logs for inspection and testing.
+				// base64 decode the body
+				data, err := base64.StdEncoding.DecodeString(m.QueryPack)
+				if err != nil {
+					log.Fatalln("body decoding error:", err)
+					return nil
+				}
+				// gunzip the decoded body
+				gzb := bytes.NewBuffer(data)
+				gzr, err := gzip.NewReader(gzb)
+				if err != nil {
+					log.Fatal(err)
+				}
+				// tar t the gunzipped body
+				log.Printf("    \"%s\": \n", "query_pack")
+				log.Printf("        base64 encoded gzipped tar file, contents:\n")
+				tr := tar.NewReader(gzr)
+				for {
+					hdr, err := tr.Next()
+					if err == io.EOF {
+						break // End of archive
+					}
+					if err != nil {
+						log.Fatalln("Tar listing failure:", err)
+					}
+					// TODO: head / tail the listing
+					log.Printf("        %s\n", hdr.Name)
+				}
+			} else {
+				log.Printf("    \"%s\": \"%s\"\n", "query_pack", m.QueryPack)
+			}
 		} else {
 			log.Printf(">> %s body: %v", from, string(buf))
 		}
