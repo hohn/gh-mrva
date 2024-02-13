@@ -51,9 +51,68 @@ func main() {
 	cmd.Execute()
 }
 
+func IsBase64Gzip(val []byte) bool {
+	// Some important payloads can be listed via
+	// base64 -d < foo1 | gunzip | tar t|head -20
+	//
+	// This function checks the request body up to the `gunzip` part.
+	//
+	if len(val) >= 4 {
+		// Extract header
+		hdr := make([]byte, base64.StdEncoding.DecodedLen(4))
+		_, err := base64.StdEncoding.Decode(hdr, []byte(val[0:4]))
+		if err != nil {
+			log.Println("WARNING: IsBase64Gzip decode error:", err)
+			return false
+		}
+		// Check for gzip heading
+		magic := []byte{0x1f, 0x8b}
+		if bytes.Equal(hdr[0:2], magic) {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
 func LogRequestDump(req *http.Request) {
 	log.Printf(">> %s %s", req.Method, req.URL)
 	req.Body = LogBody(req.Body, "request")
+}
+
+func IsZipFile(buf []byte) bool {
+	if len(buf) >= 4 {
+		// The header is []byte{ 0x50, 0x4b, 0x03, 0x04 }
+		magic := []byte{0x50, 0x4b, 0x03, 0x04}
+		if bytes.Equal(buf[0:4], magic) {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
+func MaybeJSON(buf []byte) bool {
+	if len(buf) >= 4 { // {""} is 4 characters
+		if bytes.Equal(buf[0:2], []byte("{\"")) {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
+type SubmitMsg struct {
+	ActionRepoRef string   `json:"action_repo_ref"`
+	Language      string   `json:"language"`
+	QueryPack     string   `json:"query_pack"`
+	Repositories  []string `json:"repositories"`
 }
 
 func LogBody(body io.ReadCloser, from string) io.ReadCloser {
@@ -67,99 +126,24 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			return nil
 		}
 
-		IsZipFile := func() bool {
-			if len(buf) >= 4 {
-				// The header is []byte{ 0x50, 0x4b, 0x03, 0x04 }
-				magic := []byte{0x50, 0x4b, 0x03, 0x04}
-				if bytes.Equal(buf[0:4], magic) {
-					return true
-				} else {
-					return false
-				}
-			} else {
-				return false
-			}
-		}
-
-		IsBase64Gzip := func(val []byte) bool {
-			// Some important payloads can be listed via
-			// base64 -d < foo1 | gunzip | tar t|head -20
-			//
-			// This function checks the request body up to the `gunzip` part.
-			//
-			if len(val) >= 4 {
-				// Extract header
-				hdr := make([]byte, base64.StdEncoding.DecodedLen(4))
-				_, err := base64.StdEncoding.Decode(hdr, []byte(val[0:4]))
-				if err != nil {
-					log.Println("WARNING: IsBase64Gzip decode error:", err)
-					return false
-				}
-				// Check for gzip heading
-				magic := []byte{0x1f, 0x8b}
-				if bytes.Equal(hdr[0:2], magic) {
-					return true
-				} else {
-					return false
-				}
-			} else {
-				return false
-			}
-		}
-
-		MaybeJSON := func() bool {
-			if len(buf) >= 4 { // {""} is 4 characters
-				if bytes.Equal(buf[0:2], []byte("{\"")) {
-					return true
-				} else {
-					return false
-				}
-			} else {
-				return false
-			}
-		}
-
-		if IsZipFile() {
-			// Show index for pk zip archives
-			buf1 := make([]byte, len(buf))
-			copy(buf1, buf)
-
-			r, err := zip.NewReader(bytes.NewReader(buf1), int64(len(buf1)))
-			if err != nil {
-				log.Fatal(err)
-			}
-			// defer r.Close()
-
-			// Print the archive index
-			log.Printf(">> %s body:\n", from)
-			log.Printf("zip file, contents:\n")
-
-			for _, f := range r.File {
-				log.Printf("\t%s\n", f.Name)
-			}
-		} else if MaybeJSON() {
-			// TODO: show index for encoded query packs in the json <value>:
-			// {..."query_pack": <value>,...}
-			//
-			type Message struct {
-				// FIXME: exact structure
-				ActionRepoRef string   `json:"action_repo_ref"`
-				Language      string   `json:"language"`
-				QueryPack     string   `json:"query_pack"`
-				Repositories  []string `json:"repositories"`
-			}
+		if IsZipFile(buf) {
+			ShowZipIndex(buf, from)
+		} else if MaybeJSON(buf) {
+			// See if the json contains a known message
 			buf1 := make([]byte, len(buf))
 			copy(buf1, buf)
 			dec := json.NewDecoder(bytes.NewReader(buf1))
 			dec.DisallowUnknownFields()
+			var m SubmitMsg
+			err := dec.Decode(&m)
 
-			var m Message
-			if err := dec.Decode(&m); err == io.EOF {
+			if err != nil {
 				log.Printf(">> %s body: %v", from, string(buf))
-			} else if err != nil {
-				log.Printf("WARNING: json decode error: %s\n", err)
-				log.Printf(">> %s body: %v", from, string(buf))
+				goto BodyDone
 			}
+
+			// Print index for encoded query packs in the json <value>:
+			// {..."query_pack": <value>,...}
 			log.Printf(">> %s body:\n", from)
 			log.Printf("    \"%s\": \"%s\"\n", "action_repo_ref", m.ActionRepoRef)
 			log.Printf("    \"%s\": \"%s\"\n", "language", m.Language)
@@ -167,36 +151,7 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 
 			// Provide custom logging for encoded, compressed tar file
 			if IsBase64Gzip([]byte(m.QueryPack)) {
-				// These are decoded manually via
-				//    base64 -d < foo1 | gunzip | tar t | head -20
-				// but we need complete logs for inspection and testing.
-				// base64 decode the body
-				data, err := base64.StdEncoding.DecodeString(m.QueryPack)
-				if err != nil {
-					log.Fatalln("body decoding error:", err)
-					return nil
-				}
-				// gunzip the decoded body
-				gzb := bytes.NewBuffer(data)
-				gzr, err := gzip.NewReader(gzb)
-				if err != nil {
-					log.Fatal(err)
-				}
-				// tar t the gunzipped body
-				log.Printf("    \"%s\": \n", "query_pack")
-				log.Printf("        base64 encoded gzipped tar file, contents:\n")
-				tr := tar.NewReader(gzr)
-				for {
-					hdr, err := tr.Next()
-					if err == io.EOF {
-						break // End of archive
-					}
-					if err != nil {
-						log.Fatalln("Tar listing failure:", err)
-					}
-					// TODO: head / tail the listing
-					log.Printf("        %s\n", hdr.Name)
-				}
+				LogBase64GzippedTar(m)
 			} else {
 				log.Printf("    \"%s\": \"%s\"\n", "query_pack", m.QueryPack)
 			}
@@ -204,10 +159,61 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			log.Printf(">> %s body: %v", from, string(buf))
 		}
 
+	BodyDone:
 		reader := io.NopCloser(bytes.NewBuffer(buf))
 		return reader
 	}
 	return body
+}
+
+func LogBase64GzippedTar(m SubmitMsg) {
+	// These are decoded manually via
+	//    base64 -d < foo1 | gunzip | tar t | head -20
+	// but we need complete logs for inspection and testing.
+	// base64 decode the body
+	data, err := base64.StdEncoding.DecodeString(m.QueryPack)
+	if err != nil {
+		log.Fatalln("body decoding error:", err)
+	}
+	// gunzip the decoded body
+	gzb := bytes.NewBuffer(data)
+	gzr, err := gzip.NewReader(gzb)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// tar t the gunzipped body
+	log.Printf("    \"%s\": \n", "query_pack")
+	log.Printf("        base64 encoded gzipped tar file, contents:\n")
+	tr := tar.NewReader(gzr)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break // End of archive
+		}
+		if err != nil {
+			log.Fatalln("Tar listing failure:", err)
+		}
+		// TODO: head / tail the listing
+		log.Printf("        %s\n", hdr.Name)
+	}
+}
+
+func ShowZipIndex(buf []byte, from string) {
+	buf1 := make([]byte, len(buf))
+	copy(buf1, buf)
+
+	r, err := zip.NewReader(bytes.NewReader(buf1), int64(len(buf1)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Print the archive index
+	log.Printf(">> %s body:\n", from)
+	log.Printf("zip file, contents:\n")
+
+	for _, f := range r.File {
+		log.Printf("\t%s\n", f.Name)
+	}
 }
 
 type contextKey struct {

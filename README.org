@@ -190,12 +190,12 @@
 
      # Build it
      go clean
-     go build -gcflags="all=-N -l" . # go build .
+     go build . # go build -gcflags="all=-N -l" . 
 
      ./gh-mrva -h
 
      # In log-submit-the-mrva-job.log after edit
-     SN=41
+     SN=54
      ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                --list mirva-list                                     \
                --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-$SN.out &
