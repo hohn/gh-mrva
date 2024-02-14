@@ -115,6 +115,14 @@ type SubmitMsg struct {
 	Repositories  []string `json:"repositories"`
 }
 
+func PPJson(str string) (string, error) {
+	var pretty bytes.Buffer
+	if err := json.Indent(&pretty, []byte(str), "", "    "); err != nil {
+		return "", err
+	}
+	return pretty.String(), nil
+}
+
 func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 
 	if body != nil {
@@ -130,15 +138,16 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			ShowZipIndex(buf, from)
 		} else if MaybeJSON(buf) {
 			// See if the json contains a known message
-			buf1 := make([]byte, len(buf))
-			copy(buf1, buf)
-			dec := json.NewDecoder(bytes.NewReader(buf1))
-			dec.DisallowUnknownFields()
-			var m SubmitMsg
-			err := dec.Decode(&m)
+			m, err := TrySubmitMsg(buf)
 
 			if err != nil {
-				log.Printf(">> %s body: %v", from, string(buf))
+				// Unknown message, try pretty-printing json
+				pjson, err := PPJson(string(buf))
+				if err != nil {
+					log.Printf(">> %s body: %v", from, string(buf))
+				} else {
+					log.Printf(">> %s body: %v", from, pjson)
+				}
 				goto BodyDone
 			}
 
@@ -164,6 +173,17 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 		return reader
 	}
 	return body
+}
+
+func TrySubmitMsg(buf []byte) (SubmitMsg, error) {
+	buf1 := make([]byte, len(buf))
+	copy(buf1, buf)
+	dec := json.NewDecoder(bytes.NewReader(buf1))
+	dec.DisallowUnknownFields()
+	var m SubmitMsg
+	err := dec.Decode(&m)
+	return m, err
+
 }
 
 func LogBase64GzippedTar(m SubmitMsg) {

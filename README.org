@@ -195,35 +195,22 @@
      ./gh-mrva -h
 
      # In log-submit-the-mrva-job.log after edit
-     SN=54
+     SN=60
      ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                --list mirva-list                                     \
-               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-$SN.out &
-     sleep 1 && em log-$SN.out
+               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
+     sleep 1 && em log-submit-$SN.log
 
      # Check the status
-     ./gh-mrva status --session mirva-session-$SN |& tee log-$SN-status.out
+     ./gh-mrva status --session mirva-session-$SN >& log-$SN-status.log &
+     sleep 1 && em log-$SN-status.log
 
      # Download the sarif files and CodeQL dbs when finished
      ./gh-mrva download --session mirva-session-$SN \
         --download-dbs \
         --output-dir mirva-session-$SN-sarif \
         >& log-download-$SN.log &
-     echo log-download-$SN.log 
-     # 2024/02/08 15:33:39 >> Response body is 
-     # Zip archive data, at least v1.0 to extract, compression method=deflate
-     # 0:$ unzip -v foo
-     # Archive:  foo
-     #  Length   Method    Size  Cmpr    Date    Time   CRC-32   Name
-     # --------  ------  ------- ---- ---------- ----- --------  ----
-     #     2297  Defl:N      980  57% 02-08-2024 22:54 9465f5ff  results.sarif
-     #      148  Defl:N      121  18% 02-08-2024 22:54 dc8df445  results.bqrs
-     # --------          -------  ---                            -------
-     #     2445             1101  55%                            2 files
-
-     # 0	4	Local file header signature = 0x04034b50 (PK♥♦ or "PK\3\4") PK
-     # 0x50, 0x4b, 0x03, 0x04
-     #  byteArray := []byte{ 0x50, 0x4b, 0x03, 0x04 }
+     sleep 1 && em log-download-$SN.log 
    #+END_SRC
 
 ** Use the delve debugger to find sigsev
