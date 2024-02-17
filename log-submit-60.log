@@ -23,12 +23,12 @@ Installing QLPack dependencies
 Compiling and bundling the QLPack (This may take a while)
 Generated encoded bundle for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql (cpp-flatbuffer-func)
 2024/02/14 10:20:12 >> POST https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses
-2024/02/14 10:20:13 >> request body:
+2024/02/14 10:20:13 >> request body: {
 2024/02/14 10:20:13     "action_repo_ref": "main"
 2024/02/14 10:20:13     "language": "cpp"
 2024/02/14 10:20:13     "repositories": "[google/flatbuffers]"
 2024/02/14 10:20:13     "query_pack": 
-2024/02/14 10:20:13         base64 encoded gzipped tar file, contents:
+2024/02/14 10:20:13         base64 encoded gzipped tar file, contents {
 2024/02/14 10:20:13         FlatBuffersFunc.ql
 2024/02/14 10:20:13         LICENSE
 2024/02/14 10:20:13         qlpack.yml
@@ -726,6 +726,8 @@ Generated encoded bundle for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql (cpp-f
 2024/02/14 10:20:13         .codeql/precompiled/1a3147iakngg337hdg566ibt8j6.bytes.qlx
 2024/02/14 10:20:13         .codeql/precompiled/d00cbe52un1d5jc452dpo3mfupb.bytes.qlx
 2024/02/14 10:20:13         FlatBuffersFunc.qlx
+2024/02/14 10:20:13         }
+2024/02/14 10:20:13 }
 2024/02/14 10:20:15 << 201 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses
 2024/02/14 10:20:15 >> response body: {
     "id": 9057,
