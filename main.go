@@ -146,7 +146,7 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 				if err != nil {
 					log.Printf(">> %s body: %v", from, string(buf))
 				} else {
-					log.Printf(">> %s body: %v", from, pjson)
+					log.Printf(">> %s body: {\n%v\n}", from, pjson)
 				}
 				goto BodyDone
 			}
