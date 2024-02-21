@@ -1,0 +1,6 @@
+{
+    "mirva-list":  [
+        "google/flatbuffers",
+        "psycopg/psycopg2"
+    ]
+}

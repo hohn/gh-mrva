@@ -31,8 +31,10 @@
    #+END_SRC
 
 ** Use the codeql extension to run MRVA
-   Following the [[https://codeql.github.com/docs/codeql-for-visual-studio-code/running-codeql-queries-at-scale-with-mrva/#controller-repository][instructions]] and running =./FlatBuffersFunc.ql=, the entry
-   =google/flatbuffers= has one [[https://github.com/google/flatbuffers/blob/dbce69c63b0f3cee8f6d9521479fd3b087338314/src/binary_annotator.cpp#L25C21-L25C37][result]].  Others have none.
+   Following the [[https://codeql.github.com/docs/codeql-for-visual-studio-code/running-codeql-queries-at-scale-with-mrva/#controller-repository][instructions]] and running =./FlatBuffersFunc.ql=, the entries
+   1. google/flatbuffers 
+   2. psycopg/psycopg2
+   each have one.  Others have none.
 
 ** Use custom list with target repos in VS Code
    The json file is here:
@@ -42,7 +44,7 @@
 
    It's saved in the workspace, but not in the current git repository.
 
-   Here are two snapshots for reference:
+   Here are two snapshots for reference and copy/paste:
    #+begin_src javascript
      {
          "version": 1,
@@ -52,7 +54,8 @@
                      {
                          "name": "mirva-list",
                          "repositories": [
-                             "google/flatbuffers"
+                             "google/flatbuffers",
+                             "psycopg/psycopg2"
                          ]
                      }
                  ],
@@ -61,8 +64,8 @@
              }
          },
          "selected": {
-             "kind": "variantAnalysisSystemDefinedList",
-             "listName": "top_10"
+             "kind": "variantAnalysisUserDefinedList",
+             "listName": "mirva-list"
          }
      }
    #+end_src
@@ -90,6 +93,10 @@
          }
      }
    #+end_src
+
+   Select the custom list in the
+   =variant analysis repositories= tab, then in FlatBuffersFunc.ql, right click >
+   run variant analysis
 
 ** Run MRVA from command line
    1. Install mrva cli
@@ -120,17 +127,17 @@
        # git checkout codeql-cli/v2.15.5
        codeql_path: /Users/hohn/local/codeql-lib
        controller: hohn/mirva-controller
-       list_file: /Users/hohn/local/gh-mrva/databases.json
+       list_file: /Users/hohn/local/gh-mrva/mirva-list-databases.json
 
        eof
      #+END_SRC
 
    3. Submit the mrva job
       #+BEGIN_SRC sh 
-        gh mrva submit --help    
+        ./gh-mrva submit --help    
 
-        gh mrva submit --language cpp --session mirva-session-4 \
-           --list mirva-list                                    \
+        ./gh-mrva submit --language cpp --session mirva-session-70 \
+           --list mirva-list                                       \
            --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
       #+END_SRC
 
@@ -139,18 +146,17 @@
         cd ~/local/gh-mrva
 
         # Check the status
-        gh mrva status --session mirva-session-1
+        ./gh-mrva status --session mirva-session-70
 
         # Download the sarif files when finished
-        gh mrva download --session mirva-session-1 \
-           --output-dir mirva-session-1-sarif
+        ./gh-mrva download --session mirva-session-70 \
+           --output-dir mirva-session-70
 
         # Or download the sarif files and CodeQL dbs when finished
-        gh mrva download --session mirva-session-1 \
+        ./gh-mrva download --session mirva-session-70 \
            --download-dbs \
-           --output-dir mirva-session-1-sarif
+           --output-dir mirva-session-70
       #+END_SRC
-
 
 * Miscellaneous Notes
 ** Action logs on Controller Repository
