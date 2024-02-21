@@ -2,9 +2,9 @@
         ./gh-mrva status --session mirva-session-73
 
 hohn@gh-hohn:~/local/gh-mrva
-0:$ 2024/02/21 11:56:21 >> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/9165
-2024/02/21 11:56:21 << 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/9165
-2024/02/21 11:56:21 >> response body: {
+0:$ 2024/02/21 11:56:46 >> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/9165
+2024/02/21 11:56:47 << 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/9165
+2024/02/21 11:56:47 >> response body: {
 {
     "id": 9165,
     "controller_repo": {
@@ -95,11 +95,12 @@ hohn@gh-hohn:~/local/gh-mrva
         "site_admin": true
     },
     "query_language": "cpp",
-    "query_pack_url": "https://objects-origin.githubusercontent.com/codeql-query-console/variant_analyses/9165/query_pack?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=queryconsoleprod%2F20240221%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240221T195623Z&X-Amz-Expires=3600&X-Amz-Signature=f536a871818d8204ec12bb100c3a9cdbb06727b6da529e456d1e0d10dc468099&X-Amz-SignedHeaders=host",
+    "query_pack_url": "https://objects-origin.githubusercontent.com/codeql-query-console/variant_analyses/9165/query_pack?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=queryconsoleprod%2F20240221%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240221T195649Z&X-Amz-Expires=3600&X-Amz-Signature=5b903cef385dd07480226cfbf397fa36f9226d0e4f21e29aa5b2a66b5ed5c431&X-Amz-SignedHeaders=host",
     "created_at": "2024-02-21T19:55:46Z",
     "updated_at": "2024-02-21T19:55:47Z",
     "actions_workflow_run_id": 7994786107,
-    "status": "in_progress",
+    "completed_at": "2024-02-21T19:56:31Z",
+    "status": "succeeded",
     "scanned_repositories": [
         {
             "repository": {
@@ -123,7 +124,9 @@ hohn@gh-hohn:~/local/gh-mrva
                 "stargazers_count": 21765,
                 "updated_at": "2024-02-21T18:58:59Z"
             },
-            "analysis_status": "in_progress"
+            "analysis_status": "succeeded",
+            "result_count": 1,
+            "artifact_size_in_bytes": 1327
         }
     ],
     "skipped_repositories": {
@@ -147,19 +150,20 @@ hohn@gh-hohn:~/local/gh-mrva
 }
 }
 Run name: mirva-session-73
-Status: in_progress
+Status: succeeded
 Total runs: 1
-Total successful scans: 1
+Total successful scans: 2
 Total failed scans: 0
 Total skipped repositories: 0
 Total skipped repositories due to access mismatch: 0
 Total skipped repositories due to not found: 0
 Total skipped repositories due to no database: 0
 Total skipped repositories due to over limit: 0
-Total repositories with findings: 1
-Total findings: 1
+Total repositories with findings: 2
+Total findings: 2
 Repositories with findings:
   psycopg/psycopg2 (cpp-flatbuffer-func): 1
+  google/flatbuffers (cpp-flatbuffer-func): 1
 hohn@gh-hohn:~/local/gh-mrva
 0:$ hohn@gh-hohn:~/local/gh-mrva
 0:$ 

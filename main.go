@@ -153,10 +153,15 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 
 			// Print index for encoded query packs in the json <value>:
 			// {..."query_pack": <value>,...}
-			log.Printf(">> %s body:\n", from)
+			log.Printf(">> %s body: {\n", from)
 			log.Printf("    \"%s\": \"%s\"\n", "action_repo_ref", m.ActionRepoRef)
 			log.Printf("    \"%s\": \"%s\"\n", "language", m.Language)
-			log.Printf("    \"%s\": \"%s\"\n", "repositories", m.Repositories[:])
+			pjson, err := json.MarshalIndent(m.Repositories, "", "    ")
+			if err != nil {
+				log.Printf("    \"%s\": \"%s\"\n", "repositories", m.Repositories[:])
+			} else {
+				log.Printf("    \"%s\": %s\n", "repositories", pjson)
+			}
 
 			// Provide custom logging for encoded, compressed tar file
 			if IsBase64Gzip([]byte(m.QueryPack)) {
@@ -164,6 +169,9 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 			} else {
 				log.Printf("    \"%s\": \"%s\"\n", "query_pack", m.QueryPack)
 			}
+
+			log.Printf("\n}")
+
 		} else {
 			log.Printf(">> %s body: %v", from, string(buf))
 		}

@@ -135,10 +135,7 @@
    3. Submit the mrva job
       #+BEGIN_SRC sh 
         cd ~/local/gh-mrva
-
-        ./gh-mrva submit --help    
-
-        ./gh-mrva submit --language cpp --session mirva-session-71 \
+        ./gh-mrva submit --language cpp --session mirva-session-73 \
            --list mirva-list                                       \
            --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
       #+END_SRC
@@ -148,16 +145,16 @@
         cd ~/local/gh-mrva
 
         # Check the status
-        ./gh-mrva status --session mirva-session-71
+        ./gh-mrva status --session mirva-session-73
 
         # Download the sarif files when finished
-        ./gh-mrva download --session mirva-session-71 \
-           --output-dir mirva-session-71
+        ./gh-mrva download --session mirva-session-73 \
+           --output-dir mirva-session-73
 
         # Download the sarif files and CodeQL dbs when finished
-        ./gh-mrva download --session mirva-session-71 \
+        ./gh-mrva download --session mirva-session-73 \
            --download-dbs \
-           --output-dir mirva-session-71
+           --output-dir mirva-session-73
       #+END_SRC
 
 * Miscellaneous Notes
