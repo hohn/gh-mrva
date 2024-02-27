@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
 	"io"
 	"log"
 	"os"
@@ -18,6 +16,9 @@ import (
 	"sync"
 	"text/template"
 	"time"
+
+	"github.com/google/uuid"
+	"gopkg.in/yaml.v3"
 
 	"github.com/GitHubSecurityLab/gh-mrva/models"
 	"github.com/cli/go-gh"
@@ -105,9 +106,7 @@ func GetSessionsStartingWith(prefix string) ([]string, error) {
 }
 
 func GetRunDetails(controller string, runId int) (map[string]interface{}, error) {
-	opts := api.ClientOptions{
-		Headers: map[string]string{"Accept": "application/vnd.github.v3+json"},
-	}
+	opts := gopts
 	client, err := gh.RESTClient(&opts)
 	if err != nil {
 		return nil, err
@@ -121,9 +120,7 @@ func GetRunDetails(controller string, runId int) (map[string]interface{}, error)
 }
 
 func GetRunRepositoryDetails(controller string, runId int, nwo string) (map[string]interface{}, error) {
-	opts := api.ClientOptions{
-		Headers: map[string]string{"Accept": "application/vnd.github.v3+json"},
-	}
+	opts := gopts
 	client, err := gh.RESTClient(&opts)
 	if err != nil {
 		return nil, err
@@ -173,9 +170,7 @@ func SaveSession(name string, controller string, runs []models.Run, language str
 }
 
 func SubmitRun(controller string, language string, repoChunk []string, bundle string) (int, error) {
-	opts := api.ClientOptions{
-		Headers: map[string]string{"Accept": "application/vnd.github.v3+json"},
-	}
+	opts := gopts
 	client, err := gh.RESTClient(&opts)
 	if err != nil {
 		return -1, err
@@ -197,7 +192,8 @@ func SubmitRun(controller string, language string, repoChunk []string, bundle st
 		return -1, err
 	}
 	response := make(map[string]interface{})
-	err = client.Post(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses", controller), &buf, &response)
+	// err = client.Post(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses", controller), &buf, &response)
+	err = client.Post(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/variant-analyses", controller), &buf, &response)
 	if err != nil {
 		return -1, err
 	}
@@ -614,7 +610,9 @@ func DownloadResults(task models.DownloadTask) error {
 func DownloadDatabase(task models.DownloadTask) error {
 	targetPath := filepath.Join(task.OutputDir, fmt.Sprintf("%s_db.zip", task.OutputFilename))
 	opts := api.ClientOptions{
-		Headers: map[string]string{"Accept": "application/zip"},
+		Headers:   map[string]string{"Accept": "application/zip"},
+		Host:      "localhost",
+		AuthToken: "lh_12",
 	}
 	client, err := gh.HTTPClient(&opts)
 	if err != nil {
@@ -632,4 +630,14 @@ func DownloadDatabase(task models.DownloadTask) error {
 	}
 	err = os.WriteFile(targetPath, content, os.ModePerm)
 	return nil
+}
+
+var gopts api.ClientOptions
+
+func init() {
+	gopts = api.ClientOptions{
+		Headers:   map[string]string{"Accept": "application/vnd.github.v3+json"},
+		Host:      "localhost",
+		AuthToken: "lh_12",
+	}
 }
