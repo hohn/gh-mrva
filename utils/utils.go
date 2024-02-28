@@ -112,7 +112,9 @@ func GetRunDetails(controller string, runId int) (map[string]interface{}, error)
 		return nil, err
 	}
 	response := make(map[string]interface{})
-	err = client.Get(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses/%d", controller, runId), &response)
+
+	// err = client.Get(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses/%d", controller, runId), &response)
+	err = client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/variant-analyses/%d", controller, runId), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +128,8 @@ func GetRunRepositoryDetails(controller string, runId int, nwo string) (map[stri
 		return nil, err
 	}
 	response := make(map[string]interface{})
-	err = client.Get(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses/%d/repos/%s", controller, runId, nwo), &response)
+	// err = client.Get(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses/%d/repos/%s", controller, runId, nwo), &response)
+	err = client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/variant-analyses/%d/repos/%s", controller, runId, nwo), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -600,6 +603,7 @@ func DownloadResults(task models.DownloadTask) error {
 		return errors.New("Failed to get run repository details")
 	}
 	// download the results
+	// TODO this /may/ need a url including protocol and port
 	err = downloadArtifact(runRepositoryDetails["artifact_url"].(string), task)
 	if err != nil {
 		return errors.New("Failed to download artifact")
@@ -618,7 +622,8 @@ func DownloadDatabase(task models.DownloadTask) error {
 	if err != nil {
 		return err
 	}
-	resp, err := client.Get(fmt.Sprintf("https://api.github.com/repos/%s/code-scanning/codeql/databases/%s", task.Nwo, task.Language))
+	// resp, err := client.Get(fmt.Sprintf("https://api.github.com/repos/%s/code-scanning/codeql/databases/%s", task.Nwo, task.Language))
+	resp, err := client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/databases/%s", task.Nwo, task.Language))
 	if err != nil {
 		return err
 	}
