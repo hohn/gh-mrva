@@ -200,11 +200,21 @@
      ./gh-mrva -h
 
      # In log-submit-the-mrva-job.log after edit
-     SN=93
+     SN=106
      ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                --list mirva-list                                     \
                --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
      sleep 1 && em log-submit-$SN.log
+
+     submit (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva submit --language cpp --session mirva-session-$SN     \
+                   --list mirva-list                                     \
+                   --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
+         sleep 1 && em log-submit-$SN.log
+     }
+     submit 143
 
      # Check the status
      ./gh-mrva status --session mirva-session-$SN >& log-$SN-status.log &
