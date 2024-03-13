@@ -212,20 +212,43 @@
          ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                    --list mirva-list                                     \
                    --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
-         sleep 1 && em log-submit-$SN.log
+         # sleep 1 && em log-submit-$SN.log
      }
-     submit 143
+     # submit 173
 
      # Check the status
-     ./gh-mrva status --session mirva-session-$SN >& log-$SN-status.log &
-     sleep 1 && em log-$SN-status.log
+     sessstatus (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva status --session mirva-session-$SN >& log-$SN-status.log &
+         sleep 1 && em log-$SN-status.log
+     }
+     # sessstatus 191
 
      # Download the sarif files and CodeQL dbs when finished
-     ./gh-mrva download --session mirva-session-$SN \
-        --download-dbs \
-        --output-dir mirva-session-$SN-sarif \
-        >& log-download-$SN.log &
-     sleep 1 && em log-download-$SN.log 
+     dl (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva download --session mirva-session-$SN \
+                   --download-dbs \
+                   --output-dir mirva-session-$SN-sarif \
+                   >& log-download-$SN.log &
+         sleep 1 && em log-download-$SN.log 
+     }
+     # Just download sarif / bqrs zip file
+     dl (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva download --session mirva-session-$SN \
+                   --output-dir mirva-session-$SN-sarif \
+                   >& log-download-$SN.log &
+         sleep 1 && em log-download-$SN.log 
+     }
+     # dl 191
+
+     submit      211
+     sessstatus  211
+     dl          211
    #+END_SRC
 
 ** Use the delve debugger to find sigsev
