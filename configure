@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Check if CodeQL binary is installed
+echo -e -n "${NC}Checking for CodeQL..."
+if ! command -v codeql &> /dev/null; then
+    echo -e "${RED}CodeQL binary not found. Please install CodeQL.${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
+# Check version
+echo -n -e "Checking CodeQL version...${NC}"
+if ! codeql version |head -1 |egrep '2.16|2.17' ; then
+    echo -e "${RED}CodeQL version not recognized. Please install 2.16 or newer${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+

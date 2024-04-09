@@ -1,0 +1,318 @@
+* Using MRVA
+  This repository has several additions to illustrate a full MRVA workflow.
+** Set up controller repo
+   Following [[https://codeql.github.com/docs/codeql-for-visual-studio-code/running-codeql-queries-at-scale-with-mrva/#controller-repository][the instructions]], start with 
+   manually creating the controller repository
+   #+BEGIN_SRC sh 
+     gh repo create mirva-controller --public -d 'Controller for MRVA'
+   #+END_SRC
+   This avoids 
+   #+BEGIN_SRC text
+     An error occurred while setting up the controller repository: Controller
+     repository "hohn/mirva-controller" not found.
+   #+END_SRC
+
+   Populate the controller repository
+   #+BEGIN_SRC sh 
+     mkdir -p ~/local/mirva-controller && cd ~/local/mirva-controller 
+     echo "* mirva-controller" >> README.org
+     git init
+     git add README.org
+     git commit -m "first commit"
+     git branch -M master
+     git remote add origin git@github.com:hohn/mirva-controller.git
+     git push -u origin master
+   #+END_SRC
+   This avoids
+   #+BEGIN_SRC text
+     Variant analysis failed because the controller repository hohn/mirva-controller
+     does not have a branch 'master'. Please create a 'master' branch by clicking here
+     and re-run the variant analysis query. 
+   #+END_SRC
+
+** Use the codeql extension to run MRVA
+   Following the [[https://codeql.github.com/docs/codeql-for-visual-studio-code/running-codeql-queries-at-scale-with-mrva/#controller-repository][instructions]] and running =./FlatBuffersFunc.ql=, the entries
+   1. google/flatbuffers 
+   2. psycopg/psycopg2
+   each have one.  Others have none.
+
+** Use custom list with target repos in VS Code
+   The json file is here:
+   : /Users/hohn/Library/Application Support/Code/User/workspaceStorage/bced2e4aa1a5f78ca07cf9e09151b1af/GitHub.vscode-codeql/databases.json
+
+   It can be edited in VS Code using the ={}= button.
+
+   It's saved in the workspace, but not in the current git repository.
+
+   Here are two snapshots for reference and copy/paste:
+   #+begin_src javascript
+     {
+         "version": 1,
+         "databases": {
+             "variantAnalysis": {
+                 "repositoryLists": [
+                     {
+                         "name": "mirva-list",
+                         "repositories": [
+                             "google/flatbuffers",
+                             "psycopg/psycopg2"
+                         ]
+                     }
+                 ],
+                 "owners": [],
+                 "repositories": []
+             }
+         },
+         "selected": {
+             "kind": "variantAnalysisUserDefinedList",
+             "listName": "mirva-list"
+         }
+     }
+   #+end_src
+   or
+   #+begin_src javascript
+     {
+         "version": 1,
+         "databases": {
+             "variantAnalysis": {
+                 "repositoryLists": [
+                     {
+                         "name": "mirva-list",
+                         "repositories": [
+                             "google/flatbuffers"
+                         ]
+                     }
+                 ],
+                 "owners": [],
+                 "repositories": []
+             }
+         },
+         "selected": {
+             "kind": "variantAnalysisUserDefinedList",
+             "listName": "mirva-list"
+         }
+     }
+   #+end_src
+
+   Select the custom list in the
+   =variant analysis repositories= tab, then in FlatBuffersFunc.ql, right click >
+   run variant analysis
+
+** Run MRVA from command line
+   1. Install mrva cli
+      #+BEGIN_SRC sh 
+        cd ~/local/gh-mrva
+        # Build it
+        go mod edit -replace="github.com/GitHubSecurityLab/gh-mrva=/Users/hohn/local/gh-mrva"
+        go build .
+
+        # Install 
+        gh extension remove mrva
+        gh extension install .
+
+        # Sanity check
+        gh mrva -h
+      #+END_SRC
+
+   2. Set up the configuration
+     #+BEGIN_SRC sh 
+       cd ~/local/gh-mrva
+
+       cat > ~/.config/gh-mrva/config.yml <<eof
+       # The following options are supported
+       # codeql_path: Path to CodeQL distribution (checkout of codeql repo)
+       # controller: NWO of the MRVA controller to use
+       # list_file: Path to the JSON file containing the target repos
+
+       # git checkout codeql-cli/v2.15.5
+       codeql_path: /Users/hohn/local/codeql-lib
+       controller: hohn/mirva-controller
+       list_file: /Users/hohn/local/gh-mrva/mirva-list-databases.json
+
+       eof
+     #+END_SRC
+
+   3. Submit the mrva job
+      #+BEGIN_SRC sh 
+        cd ~/local/gh-mrva
+        ./gh-mrva submit --language cpp --session mirva-session-73 \
+           --list mirva-list                                       \
+           --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+      #+END_SRC
+
+   4. Check the status and download the sarif files
+      #+BEGIN_SRC sh 
+        cd ~/local/gh-mrva
+
+        # Check the status
+        ./gh-mrva status --session mirva-session-73
+
+        # Download the sarif files when finished
+        ./gh-mrva download --session mirva-session-73 \
+           --output-dir mirva-session-73
+
+        # Download the sarif files and CodeQL dbs when finished
+        ./gh-mrva download --session mirva-session-73 \
+           --download-dbs \
+           --output-dir mirva-session-73
+      #+END_SRC
+
+* Miscellaneous Notes
+** Action logs on Controller Repository
+   The action logs are on the controller repository at
+   https://github.com/hohn/mirva-controller/actions.
+
+   The =action>google flatbuffers= log references
+   : github/codeql-variant-analysis-action
+   #+BEGIN_SRC yaml
+     Run actions/checkout@v4
+     with:
+         repository: github/codeql-variant-analysis-action
+         ref: main
+         token: ***
+         ssh-strict: true
+         persist-credentials: true
+         clean: true
+         sparse-checkout-cone-mode: true
+         fetch-depth: 1
+         fetch-tags: false
+         show-progress: true
+         lfs: false
+         submodules: false
+         set-safe-directory: true
+         env:
+             CODEQL_ENABLE_EXPERIMENTAL_FEATURES_SWIFT: true
+   #+END_SRC
+   This is https://github.com/github/codeql-variant-analysis-action
+
+   The workflow producing the logs:
+   https://github.com/github/codeql-variant-analysis-action/blob/main/variant-analysis-workflow.yml
+** Compacted Edit-Run-Debug Cycle
+   With a full [[*Using MRVA][Using MRVA]] cycle done, only these steps are needed in a
+   edit-run-debug cycle.
+   #+BEGIN_SRC sh 
+     cd ~/local/gh-mrva
+
+     # Build it
+     go clean
+     go build . # go build -gcflags="all=-N -l" . 
+
+     ./gh-mrva -h
+
+     # In log-submit-the-mrva-job.log after edit
+     SN=106
+     ./gh-mrva submit --language cpp --session mirva-session-$SN     \
+               --list mirva-list                                     \
+               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
+     sleep 1 && em log-submit-$SN.log
+
+     submit (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva submit --language cpp --session mirva-session-$SN     \
+                   --list mirva-list                                     \
+                   --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
+         # sleep 1 && em log-submit-$SN.log
+     }
+     # submit 173
+
+     # Check the status
+     sessstatus (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva status --session mirva-session-$SN >& log-$SN-status.log &
+         sleep 1 && em log-$SN-status.log
+     }
+     # sessstatus 191
+
+     # Download the sarif files and CodeQL dbs when finished
+     dl (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva download --session mirva-session-$SN \
+                   --download-dbs \
+                   --output-dir mirva-session-$SN-sarif \
+                   >& log-download-$SN.log &
+         sleep 1 && em log-download-$SN.log 
+     }
+     # Just download sarif / bqrs zip file
+     dl (){
+         SN=$1
+         cd ~/local/gh-mrva
+         ./gh-mrva download --session mirva-session-$SN \
+                   --output-dir mirva-session-$SN-sarif \
+                   >& log-download-$SN.log &
+         sleep 1 && em log-download-$SN.log 
+     }
+     # dl 191
+
+     submit      211
+     sessstatus  211
+     dl          211
+   #+END_SRC
+
+** Use the delve debugger to find sigsev
+   https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv.md
+   #+BEGIN_SRC sh 
+     # Use the delve debugger to find sigsev
+
+     # compile debugging binaries with -gcflags="all=-N -l" on Go 1.10 or later
+     go build -gcflags="all=-N -l" .
+
+     # Check the status
+     dlv debug -- status --session mirva-session-$SN
+     # Type 'help' for list of commands.
+     # (dlv) c
+
+     dlv debug -- download --session mirva-session-$SN \
+         --download-dbs \
+         --output-dir mirva-session-$SN-sarif \
+
+   #+END_SRC
+** VS Code Debugger Configuration
+*** launch.json for download
+   #+begin_src javascript
+     {
+         "version": "0.2.0",
+         "configurations": [
+                  {
+                 "name": "Launch Package",
+                 "type": "go",
+                 "request": "launch",
+                 "mode": "auto",
+                 "program": "${workspaceFolder}",
+                 "buildFlags": [],
+                 "args": ["download", "--session", "mirva-session-11", "--download-dbs", "--output-dir","mirva-session-11-sarif"]
+             }
+         ]
+     }
+   #+end_src
+
+*** launch.json for submission
+    Matching
+    #+BEGIN_SRC sh 
+     ./gh-mrva submit --language cpp --session mirva-session-$SN     \
+               --list mirva-list                                     \
+               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-$SN.out &
+    #+END_SRC
+
+    #+begin_src javascript
+      {
+          "version": "0.2.0",
+          "configurations": [
+              {
+                  "name": "Launch Package",
+                  "type": "go",
+                  "request": "launch",
+                  "mode": "auto",
+                  "program": "${workspaceFolder}",
+                  "buildFlags": [],
+                  "args": ["submit",
+                           "--language", "cpp",
+                           "--session", "mirva-session-29",
+                           "--list", "mirva-list",
+                           "--query", "/Users/hohn/local/gh-mrva/FlatBuffersFunc.ql"]
+              }
+          ]
+      }
+    #+end_src

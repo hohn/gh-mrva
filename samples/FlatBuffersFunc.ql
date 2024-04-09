@@ -9,5 +9,7 @@
 import cpp
 
 from Function f
-where f.getName() = "MakeBinaryRegion"
+where
+  f.getName() = "MakeBinaryRegion" or
+  f.getName() = "microprotocols_add"
 select f, "definition of MakeBinaryRegion"

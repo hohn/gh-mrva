@@ -1,0 +1,61 @@
+hohn@gh-hohn:~/local/gh-mrva
+1:$ gh mrva submit --language cpp --session mirva-session-2 \
+   --list mirva-list                                    \
+   --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+
+> > Resolving mirva-list repositories from /Users/hohn/local/gh-mrva/databases.json
+Submitting 1 queries for 1 repositories
+Generating query pack for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+Resolving query id for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+Metadata: {
+  "name" : "pickfun",
+  "description" : "pick function from FlatBuffers",
+  "kind" : "problem",
+  "id" : "cpp-flatbuffer-func",
+  "problem.severity" : "warning"
+}
+
+QLPack exists, stripping all other queries from /Users/hohn/local/gh-mrva
+Preparing stripped QLPack in /var/folders/bk/dt0jx9f92zq876lmm3f2dpk40000gn/T/query-pack-1614522293
+Fixing QLPack in /var/folders/bk/dt0jx9f92zq876lmm3f2dpk40000gn/T/query-pack-1614522293
+Installing QLPack dependencies
+Compiling and bundling the QLPack (This may take a while)
+Generated encoded bundle for /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql (cpp-flatbuffer-func)
+2024/01/29 10:36:30 --> POST https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses
+2024/01/29 10:36:32 <-- 201 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses (2.26s)
+Done!
+
+0:$ gh mrva status --session mirva-session-2
+
+2024/01/29 10:43:39 --> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809
+2024/01/29 10:43:39 <-- 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809 (343.45ms)
+Run name: mirva-session-2
+Status: succeeded
+Total runs: 1
+Total successful scans: 1
+Total failed scans: 0
+Total skipped repositories: 0
+Total skipped repositories due to access mismatch: 0
+Total skipped repositories due to not found: 0
+Total skipped repositories due to no database: 0
+Total skipped repositories due to over limit: 0
+Total repositories with findings: 1
+Total findings: 1
+Repositories with findings:
+  google/flatbuffers (cpp-flatbuffer-func): 1
+
+0:$ gh mrva download --session mirva-session-2 \
+   --output-dir mirva-session-2-sarif
+
+> 2024/01/29 10:44:07 --> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809
+2024/01/29 10:44:08 <-- 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809 (304.94ms)
+Downloading artifacts for google_flatbuffers_8809
+2024/01/29 10:44:08 --> GET https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809/repos/google/flatbuffers
+2024/01/29 10:44:08 <-- 200 https://api.github.com/repos/hohn/mirva-controller/code-scanning/codeql/variant-analyses/8809/repos/google/flatbuffers (203.11ms)
+2024/01/29 10:44:08 --> GET https://objects-origin.githubusercontent.com/codeql-query-console/codeql-variant-analysis-repo-tasks/8809/19953044/0ae72609-642a-41ae-9049-4e3b94cdcf8d?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=queryconsoleprod%2F20240129%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240129T184409Z&X-Amz-Expires=300&X-Amz-Signature=a6db73f9f48b96ccae1bab19b912e6097e5dba53acb3688a126ca4a6dadd03a7&X-Amz-SignedHeaders=host&actor_id=2253228&key_id=0&repo_id=747492529
+2024/01/29 10:44:08 <-- 307 https://objects-origin.githubusercontent.com/codeql-query-console/codeql-variant-analysis-repo-tasks/8809/19953044/0ae72609-642a-41ae-9049-4e3b94cdcf8d?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=queryconsoleprod%2F20240129%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240129T184409Z&X-Amz-Expires=300&X-Amz-Signature=a6db73f9f48b96ccae1bab19b912e6097e5dba53acb3688a126ca4a6dadd03a7&X-Amz-SignedHeaders=host&actor_id=2253228&key_id=0&repo_id=747492529 (277.63ms)
+2024/01/29 10:44:08 --> GET https://queryconsoleprod.blob.core.windows.net/github-codeql-query-console-prod/codeql-variant-analysis-repo-tasks/8809/19953044/0ae72609-642a-41ae-9049-4e3b94cdcf8d?se=2024-01-29T18%3A54%3A09Z&sig=cdGEZ5U3HsIOxG0PNA8i%2Fe043DJ68lL1ooeZRoljY%2F4%3D&sp=r&spr=https&sr=b&sv=2020-10-02
+2024/01/29 10:44:09 <-- 200 https://queryconsoleprod.blob.core.windows.net/github-codeql-query-console-prod/codeql-variant-analysis-repo-tasks/8809/19953044/0ae72609-642a-41ae-9049-4e3b94cdcf8d?se=2024-01-29T18%3A54%3A09Z&sig=cdGEZ5U3HsIOxG0PNA8i%2Fe043DJ68lL1ooeZRoljY%2F4%3D&sp=r&spr=https&sr=b&sv=2020-10-02 (429.72ms)
+Downloaded [mirva-session-2-sarif/google_flatbuffers_8809.sarif mirva-session-2-sarif/google_flatbuffers_8809.bqrs]
+Downloaded artifact for google/flatbuffers (1/1)
+1 artifacts downloaded
