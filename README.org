@@ -134,10 +134,10 @@
 
    3. Submit the mrva job
       #+BEGIN_SRC sh 
-        cd ~/local/gh-mrva
-        ./gh-mrva submit --language cpp --session mirva-session-73 \
+        cd ~/work-gh/mrva/gh-mrva/
+        ./gh-mrva submit --language cpp --session mirva-session-200 \
            --list mirva-list                                       \
-           --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql
+           --query ~/work-gh/mrva/gh-mrva/FlatBuffersFunc.ql
       #+END_SRC
 
    4. Check the status and download the sarif files
