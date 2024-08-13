@@ -127,7 +127,7 @@
        # git checkout codeql-cli/v2.15.5
        codeql_path: /Users/hohn/local/codeql-lib
        controller: hohn/mirva-controller
-       list_file: /Users/hohn/local/gh-mrva/mirva-list-databases.json
+       list_file: /Users/hohn/work-gh/mrva/gh-mrva/mirva-list-databases.json
 
        eof
      #+END_SRC
@@ -189,62 +189,68 @@
    https://github.com/github/codeql-variant-analysis-action/blob/main/variant-analysis-workflow.yml
 ** Compacted Edit-Run-Debug Cycle
    With a full [[*Using MRVA][Using MRVA]] cycle done, only these steps are needed in a
-   edit-run-debug cycle.
+   edit-run-debug cycle.  Note that paths must be updated for your system.
    #+BEGIN_SRC sh 
-     cd ~/local/gh-mrva
+     # Build the client
+     cd ~/work-gh/mrva/gh-mrva
 
-     # Build it
      go clean
      go build . # go build -gcflags="all=-N -l" . 
 
      ./gh-mrva -h
 
-     # In log-submit-the-mrva-job.log after edit
-     SN=106
-     ./gh-mrva submit --language cpp --session mirva-session-$SN     \
-               --list mirva-list                                     \
-               --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
-     sleep 1 && em log-submit-$SN.log
+     # Set up the configuration -- check your paths
+     cat > ~/.config/gh-mrva/config.yml <<eof
+            # The following options are supported
+            # codeql_path: Path to CodeQL distribution (checkout of codeql repo)
+            # controller: NWO of the MRVA controller to use
+            # list_file: Path to the JSON file containing the target repos
 
+            # git checkout codeql-cli/v2.15.5
+            codeql_path: /Users/hohn/local/codeql-lib
+            controller: hohn/mirva-controller
+            list_file: /Users/hohn/work-gh/mrva/gh-mrva/mirva-list-databases.json
+
+     eof
+     
+     # Define utility functions
      submit (){
          SN=$1
-         cd ~/local/gh-mrva
+         cd ~/work-gh/mrva/gh-mrva
          ./gh-mrva submit --language cpp --session mirva-session-$SN     \
                    --list mirva-list                                     \
-                   --query /Users/hohn/local/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
-         # sleep 1 && em log-submit-$SN.log
+                   --query /Users/hohn/work-gh/mrva/gh-mrva/FlatBuffersFunc.ql >& log-submit-$SN.log &
+         sleep 1 && em log-submit-$SN.log
      }
-     # submit 173
 
-     # Check the status
      sessstatus (){
          SN=$1
-         cd ~/local/gh-mrva
+         cd ~/work-gh/mrva/gh-mrva
          ./gh-mrva status --session mirva-session-$SN >& log-$SN-status.log &
          sleep 1 && em log-$SN-status.log
      }
-     # sessstatus 191
 
      # Download the sarif files and CodeQL dbs when finished
      dl (){
          SN=$1
-         cd ~/local/gh-mrva
+         cd ~/work-gh/mrva/gh-mrva
          ./gh-mrva download --session mirva-session-$SN \
                    --download-dbs \
                    --output-dir mirva-session-$SN-sarif \
                    >& log-download-$SN.log &
          sleep 1 && em log-download-$SN.log 
      }
+
      # Just download sarif / bqrs zip file
      dl (){
          SN=$1
-         cd ~/local/gh-mrva
+         cd ~/work-gh/mrva/gh-mrva
          ./gh-mrva download --session mirva-session-$SN \
                    --output-dir mirva-session-$SN-sarif \
                    >& log-download-$SN.log &
          sleep 1 && em log-download-$SN.log 
      }
-     # dl 191
+     
 
      submit      211
      sessstatus  211
