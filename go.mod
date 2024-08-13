@@ -33,4 +33,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // direct
 )
 
-replace github.com/GitHubSecurityLab/gh-mrva => /Users/hohn/local/gh-mrva
+replace github.com/GitHubSecurityLab/gh-mrva => /Users/hohn/work-gh/mrva/gh-mrva
