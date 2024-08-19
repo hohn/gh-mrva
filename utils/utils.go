@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -591,7 +592,7 @@ func downloadArtifact(url string, task models.DownloadTask) error {
 	if len(downloadedFiles) == 0 {
 		return errors.New("No results files found in artifact")
 	} else {
-		fmt.Println("Downloaded", downloadedFiles)
+		slog.Info("Downloaded", downloadedFiles)
 		return nil
 	}
 }

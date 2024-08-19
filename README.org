@@ -270,10 +270,16 @@
      # Type 'help' for list of commands.
      # (dlv) c
 
+     # dlv debug builds, so the above build may be redundant
      dlv debug -- download --session mirva-session-$SN \
          --download-dbs \
-         --output-dir mirva-session-$SN-sarif \
+         --output-dir mirva-session-$SN-sarif 
 
+     # dlv may say 'no sources', but this works anyay
+     b main.main    
+     l
+
+     # This inline use of dlv may fail; attaching to a process is more reliable
    #+END_SRC
 ** VS Code Debugger Configuration
 *** launch.json for download

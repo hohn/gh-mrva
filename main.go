@@ -28,9 +28,12 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/GitHubSecurityLab/gh-mrva/cmd"
@@ -40,6 +43,42 @@ import (
 )
 
 func main() {
+
+	helpFlag := flag.Bool("help", false, "Display help message")
+	logLevel := flag.String("loglevel", "info", "Set log level: debug, info, warn, error")
+
+	// Custom usage function for the help flag
+	flag.Usage = func() {
+		log.Printf("Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+		log.Println("\nExamples:")
+		log.Println("go run main.go -loglevel=debug ")
+	}
+
+	// Parse the flags
+	flag.Parse()
+
+	// Handle the help flag
+	if *helpFlag {
+		flag.Usage()
+		return
+	}
+
+	// Apply 'loglevel' flag
+	switch *logLevel {
+	case "debug":
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	case "info":
+		slog.SetLogLoggerLevel(slog.LevelInfo)
+	case "warn":
+		slog.SetLogLoggerLevel(slog.LevelWarn)
+	case "error":
+		slog.SetLogLoggerLevel(slog.LevelError)
+	default:
+		log.Printf("Invalid logging verbosity level: %s", *logLevel)
+		os.Exit(1)
+	}
+
 	var transport = &loghttp.Transport{
 		Transport:   http.DefaultTransport,
 		LogRequest:  LogRequestDump,
@@ -78,7 +117,7 @@ func IsBase64Gzip(val []byte) bool {
 }
 
 func LogRequestDump(req *http.Request) {
-	log.Printf(">> %s %s", req.Method, req.URL)
+	slog.Debug(">> %s %s", req.Method, req.URL)
 	req.Body = LogBody(req.Body, "request")
 }
 
@@ -129,7 +168,7 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 		buf, err := io.ReadAll(body)
 		if err != nil {
 			var w http.ResponseWriter
-			log.Fatalf("Error reading %s body: %v", from, err.Error())
+			slog.Error("Error reading %s body: %v", from, err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return nil
 		}
@@ -144,36 +183,36 @@ func LogBody(body io.ReadCloser, from string) io.ReadCloser {
 				// Unknown message, try pretty-printing json
 				pjson, err := PPJson(string(buf))
 				if err != nil {
-					log.Printf(">> %s body: %v", from, string(buf))
+					slog.Debug(">> %s body: %v", from, string(buf))
 				} else {
-					log.Printf(">> %s body: {\n%v\n}", from, pjson)
+					slog.Debug(">> %s body: {\n%v\n}", from, pjson)
 				}
 				goto BodyDone
 			}
 
 			// Print index for encoded query packs in the json <value>:
 			// {..."query_pack": <value>,...}
-			log.Printf(">> %s body: {\n", from)
-			log.Printf("    \"%s\": \"%s\"\n", "action_repo_ref", m.ActionRepoRef)
-			log.Printf("    \"%s\": \"%s\"\n", "language", m.Language)
+			slog.Debug(">> body: {\n", "from", from)
+			slog.Debug("    \n", "action_repo_ref", m.ActionRepoRef)
+			slog.Debug("    \n", "language", m.Language)
 			pjson, err := json.MarshalIndent(m.Repositories, "", "    ")
 			if err != nil {
-				log.Printf("    \"%s\": \"%s\"\n", "repositories", m.Repositories[:])
+				slog.Debug("    \n", "repositories", m.Repositories[:])
 			} else {
-				log.Printf("    \"%s\": %s\n", "repositories", pjson)
+				slog.Debug("    \n", "repositories", pjson)
 			}
 
 			// Provide custom logging for encoded, compressed tar file
 			if IsBase64Gzip([]byte(m.QueryPack)) {
 				LogBase64GzippedTar(m)
 			} else {
-				log.Printf("    \"%s\": \"%s\"\n", "query_pack", m.QueryPack)
+				slog.Debug("    \"%s\": \"%s\"\n", "query_pack", m.QueryPack)
 			}
 
-			log.Printf("\n}")
+			slog.Debug("\n}")
 
 		} else {
-			log.Printf(">> %s body: %v", from, string(buf))
+			slog.Debug(">> %s body: %v", from, string(buf))
 		}
 
 	BodyDone:
@@ -201,17 +240,17 @@ func LogBase64GzippedTar(m SubmitMsg) {
 	// base64 decode the body
 	data, err := base64.StdEncoding.DecodeString(m.QueryPack)
 	if err != nil {
-		log.Fatalln("body decoding error:", err)
+		slog.Error("body decoding error", "err", err)
 	}
 	// gunzip the decoded body
 	gzb := bytes.NewBuffer(data)
 	gzr, err := gzip.NewReader(gzb)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("unzip error", "err", err)
 	}
 	// tar t the gunzipped body
-	log.Printf("    \"%s\": \n", "query_pack")
-	log.Printf("        base64 encoded gzipped tar file, contents:\n")
+	slog.Debug("    \"query_pack\": \n")
+	slog.Debug("        base64 encoded gzipped tar file, contents:\n")
 	tr := tar.NewReader(gzr)
 	for {
 		hdr, err := tr.Next()
@@ -219,10 +258,10 @@ func LogBase64GzippedTar(m SubmitMsg) {
 			break // End of archive
 		}
 		if err != nil {
-			log.Fatalln("Tar listing failure:", err)
+			slog.Error("Tar listing failure", "err", err)
 		}
-		// TODO: head / tail the listing
-		log.Printf("        %s\n", hdr.Name)
+		// TODO: cli option to head / tail the listing
+		slog.Debug("        ", "", hdr.Name)
 	}
 }
 
@@ -236,11 +275,11 @@ func ShowZipIndex(buf []byte, from string) {
 	}
 
 	// Print the archive index
-	log.Printf(">> %s body:\n", from)
-	log.Printf("zip file, contents:\n")
+	slog.Debug(">> body:\n", "from", from)
+	slog.Debug("zip file, contents:\n")
 
 	for _, f := range r.File {
-		log.Printf("\t%s\n", f.Name)
+		slog.Debug("\t", f.Name)
 	}
 }
 
@@ -253,10 +292,11 @@ var ContextKeyRequestStart = &contextKey{"RequestStart"}
 func LogResponseDump(resp *http.Response) {
 	ctx := resp.Request.Context()
 	if start, ok := ctx.Value(ContextKeyRequestStart).(time.Time); ok {
-		log.Printf("<< %d %s (%s)", resp.StatusCode, resp.Request.URL,
-			roundtime.Duration(time.Since(start), 2))
+		slog.Debug("<< ", "status", resp.StatusCode,
+			"url", resp.Request.URL,
+			"duration", roundtime.Duration(time.Since(start), 2))
 	} else {
-		log.Printf("<< %d %s", resp.StatusCode, resp.Request.URL)
+		slog.Debug("<< ", "status", resp.StatusCode, "url", resp.Request.URL)
 	}
 
 	resp.Body = LogBody(resp.Body, "response")
