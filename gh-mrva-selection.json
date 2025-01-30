@@ -1,15 +1,15 @@
 {
     "mirva-list": [
-        "xoreaxeaxeax/movfuscatorctsj8f7e5b",
-        "microsoft/node-native-keymapctsj4cc9a2",
-        "BoomingTech/Piccoloctsj6d7177",
-        "USCiLab/cerealctsj264953",
-        "KhronosGroup/OpenXR-SDKctsj984ee6",
-        "tdlib/telegram-bot-apictsj8529d9",
-        "WinMerge/winmergectsj101305",
-        "timescale/timescaledbctsjf617cf",
-        "pocoproject/pococtsj26b932",
-        "quickfix/quickfixctsjebfd13",
-        "libfuse/libfusectsj7a66a4"
+        "lz4/lz4ctsj2479c5",
+        "pmneila/PyMCubesctsj582da6",
+        "murat-dogan/node-datachannelctsj4edeef",
+        "Mbed-TLS/mbedtlsctsj17ef85",
+        "tsl0922/ttydctsj2e3faa",
+        "medooze/media-server-nodectsj5e30b3",
+        "ampl/gslctsj4b270e",
+        "baidu/sofa-pbrpcctsjba3501",
+        "emscripten-core/emscriptenctsj16e1d3",
+        "dlundquist/sniproxyctsj3d83e7",
+        "hyprwm/Hyprlandctsjc2425f"
     ]
 }
