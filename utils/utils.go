@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -534,72 +535,116 @@ func DownloadWorker(wg *sync.WaitGroup, taskChannel <-chan models.DownloadTask, 
 }
 
 func downloadArtifact(url string, task models.DownloadTask) error {
-	client, err := gh.HTTPClient(nil)
-	if err != nil {
-		return err
+	slog.Info("downloadArtifact/start", "url", url, "task", task)
+
+	// client, err := gh.HTTPClient(nil)
+	client := &http.Client{}
+
+	// if err != nil {
+	// 	slog.Error("downloadArtifact/httpClient failed", "err", err)
+	// 	return err
+	// }
+
+	// Inspect the type
+	slog.Info("downloadArtifact/httpClient/type", "type", fmt.Sprintf("%T", client))
+
+	// Check if it has a custom Transport (e.g., for auth hooks)
+	if client.Transport != nil {
+		slog.Info("downloadArtifact/httpClient/transport", "transport_type", fmt.Sprintf("%T", client.Transport))
+
+		// If it's a round-tripper wrapper, you can often unwrap or type assert it
+		switch tr := client.Transport.(type) {
+		case *http.Transport:
+			slog.Info("downloadArtifact/httpClient/transport/http.Transport", "details", fmt.Sprintf("%+v", tr))
+		default:
+			slog.Info("downloadArtifact/httpClient/transport/unknown", "details", fmt.Sprintf("%#v", tr))
+		}
+	} else {
+		slog.Info("downloadArtifact/httpClient/transport", "transport", "nil")
 	}
+
+	// Log timeout, just in case
+	slog.Info("downloadArtifact/httpClient/timeout", "timeout", client.Timeout)
+
 	resp, err := client.Get(url)
 	if err != nil {
+		slog.Error("downloadArtifact/get", "url", url, "err", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("downloadArtifact/readBody", "err", err)
+		return err
 	}
 
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("downloadArtifact/newZipReader", "err", err)
+		return err
 	}
 
 	downloadedFiles := []string{}
 	for _, zf := range zipReader.File {
+		slog.Info("downloadArtifact/zipEntry", "name", zf.Name)
 
 		if zf.Name != "results.sarif" && zf.Name != "results.bqrs" {
 			continue
 		}
+
 		f, err := zf.Open()
 		if err != nil {
-			log.Fatal(err)
+			slog.Error("downloadArtifact/openZipFile", "name", zf.Name, "err", err)
+			return err
 		}
 		defer f.Close()
+
 		content, err := io.ReadAll(f)
 		if err != nil {
-			log.Fatal(err)
+			slog.Error("downloadArtifact/readZipContent", "name", zf.Name, "err", err)
+			return err
 		}
 
 		outputDir := task.OutputDir
 		outputFilename := task.OutputFilename
 		if zf.Name == "results.bqrs" {
-			outputFilename = outputFilename + ".bqrs"
+			outputFilename += ".bqrs"
 		} else if zf.Name == "results.sarif" {
-			outputFilename = outputFilename + ".sarif"
+			outputFilename += ".sarif"
 		}
 
 		// replace remote-query with real query id
 		content = bytes.Replace(content, []byte("remote-query"), []byte(task.QueryId), -1)
 
 		resultPath := filepath.Join(outputDir, outputFilename)
+		slog.Info("downloadArtifact/writeFile",
+			"outputFilename", outputFilename,
+			"resultPath", resultPath)
+
 		err = os.WriteFile(resultPath, content, os.ModePerm)
 		if err != nil {
+			slog.Error("downloadArtifact/writeFileError", "path", resultPath, "err", err)
 			return err
 		}
+
 		downloadedFiles = append(downloadedFiles, resultPath)
 	}
 
 	if len(downloadedFiles) == 0 {
-		return errors.New("No results files found in artifact")
-	} else {
-		slog.Info("Downloaded", downloadedFiles)
-		return nil
+		err := errors.New("no results files found in artifact")
+		slog.Error("downloadArtifact/empty", "err", err)
+		return err
 	}
+
+	slog.Info("downloadArtifact/success", "files", downloadedFiles)
+	return nil
 }
 
 func DownloadResults(task models.DownloadTask) error {
 	// download artifact (BQRS or SARIF)
 	runRepositoryDetails, err := GetRunRepositoryDetails(task.Controller, task.RunId, task.Nwo)
+	slog.Info("DownloadResults", "runRepositoryDetails", runRepositoryDetails)
 	if err != nil {
 		return errors.New("Failed to get run repository details")
 	}

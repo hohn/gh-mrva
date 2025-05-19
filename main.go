@@ -79,6 +79,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	log.Printf("logging verbosity level: %s", *logLevel)
+
 	var transport = &loghttp.Transport{
 		Transport:   http.DefaultTransport,
 		LogRequest:  LogRequestDump,
