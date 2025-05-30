@@ -116,7 +116,12 @@ func GetRunDetails(controller string, runId int) (map[string]interface{}, error)
 	response := make(map[string]interface{})
 
 	// err = client.Get(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses/%d", controller, runId), &response)
-	err = client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/variant-analyses/%d", controller, runId), &response)
+	url := os.Getenv("MRVA_SERVER_URL")
+	if url == "" {
+		return nil, fmt.Errorf("missing MRVA_SERVER_URL in environment")
+	}
+
+	err = client.Get(fmt.Sprintf("%s/repos/%s/code-scanning/codeql/variant-analyses/%d", url, controller, runId), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +136,12 @@ func GetRunRepositoryDetails(controller string, runId int, nwo string) (map[stri
 	}
 	response := make(map[string]interface{})
 	// err = client.Get(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses/%d/repos/%s", controller, runId, nwo), &response)
-	err = client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/variant-analyses/%d/repos/%s", controller, runId, nwo), &response)
+	url := os.Getenv("MRVA_SERVER_URL")
+	if url == "" {
+		return nil, fmt.Errorf("missing MRVA_SERVER_URL in environment")
+	}
+
+	err = client.Get(fmt.Sprintf("%s/repos/%s/code-scanning/codeql/variant-analyses/%d/repos/%s", url, controller, runId, nwo), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +208,12 @@ func SubmitRun(controller string, language string, repoChunk []string, bundle st
 	}
 	response := make(map[string]interface{})
 	// err = client.Post(fmt.Sprintf("repos/%s/code-scanning/codeql/variant-analyses", controller), &buf, &response)
-	err = client.Post(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/variant-analyses", controller), &buf, &response)
+	url := os.Getenv("MRVA_SERVER_URL")
+	if url == "" {
+		return 0, fmt.Errorf("missing MRVA_SERVER_URL in environment")
+	}
+
+	err = client.Post(fmt.Sprintf("%s/repos/%s/code-scanning/codeql/variant-analyses", url, controller), &buf, &response)
 	if err != nil {
 		return -1, err
 	}
@@ -669,7 +684,14 @@ func DownloadDatabase(task models.DownloadTask) error {
 		return err
 	}
 	// resp, err := client.Get(fmt.Sprintf("https://api.github.com/repos/%s/code-scanning/codeql/databases/%s", task.Nwo, task.Language))
-	resp, err := client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/databases/%s", task.Nwo, task.Language))
+	// resp, err := client.Get(fmt.Sprintf("http://localhost:8080/repos/%s/code-scanning/codeql/databases/%s", task.Nwo, task.Language))
+
+	url := os.Getenv("MRVA_SERVER_URL")
+	if url == "" {
+		return fmt.Errorf("missing MRVA_SERVER_URL in environment")
+	}
+	resp, err := client.Get(fmt.Sprintf("%s/repos/%s/code-scanning/codeql/databases/%s", url, task.Nwo, task.Language))
+
 	if err != nil {
 		return err
 	}
