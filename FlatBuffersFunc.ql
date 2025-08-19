@@ -1,6 +1,6 @@
 /**
  * @name pickfun
- * @description pick function from FlatBuffers
+ * @description Pick function from FlatBuffers
  * @kind problem
  * @id cpp-flatbuffer-func
  * @problem.severity warning

@@ -1,15 +1,9 @@
 {
     "mirva-list": [
-        "lz4/lz4ctsj2479c5",
-        "pmneila/PyMCubesctsj582da6",
-        "murat-dogan/node-datachannelctsj4edeef",
-        "Mbed-TLS/mbedtlsctsj17ef85",
-        "tsl0922/ttydctsj2e3faa",
-        "medooze/media-server-nodectsj5e30b3",
-        "ampl/gslctsj4b270e",
-        "baidu/sofa-pbrpcctsjba3501",
-        "emscripten-core/emscriptenctsj16e1d3",
-        "dlundquist/sniproxyctsj3d83e7",
-        "hyprwm/Hyprlandctsjc2425f"
+        "Serial-Studio/Serial-Studio",
+        "UEFITool/UEFITool",
+        "aircrack-ng/aircrack-ng",
+        "bulk-builder/bulk-builder",
+        "tesseract/tesseract"
     ]
 }

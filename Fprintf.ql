@@ -1,6 +1,6 @@
 /**
  * @name findPrintf
- * @description find calls to plain fprintf
+ * @description Find calls to plain fprintf
  * @kind problem
  * @id cpp-fprintf-call
  * @problem.severity warning
