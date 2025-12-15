@@ -1,9 +1,9 @@
 {
     "mirva-list": [
-        "Serial-Studio/Serial-Studio",
         "UEFITool/UEFITool",
-        "aircrack-ng/aircrack-ng",
-        "bulk-builder/bulk-builder",
-        "tesseract/tesseract"
+        "inotify-tools/inotify-tools",
+        "loongcollector/loongcollector",
+        "mongoose/mongoose",
+        "xrootd/xrootd"
     ]
 }
